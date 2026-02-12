@@ -1,0 +1,39 @@
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: cad-search-db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-caduser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cadpass}
+      POSTGRES_DB: ${POSTGRES_DB:-cadsearch}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./backend/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U caduser -d cadsearch"]
+      interval: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: cad-search-backend
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-caduser}:${POSTGRES_PASSWORD:-cadpass}@db:5432/${POSTGRES_DB:-cadsearch}
+      UPLOAD_DIR: /app/uploads
+    volumes:
+      - ./backend/app:/app/app
+      - ./backend/scripts:/app/scripts
+      - cad_uploads:/app/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  cad_uploads:
