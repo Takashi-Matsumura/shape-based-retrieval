@@ -3,6 +3,8 @@
 
 import os
 import sys
+import importlib
+import pkgutil
 from pathlib import Path
 from PyInstaller.utils.hooks import collect_data_files
 
@@ -10,10 +12,17 @@ block_cipher = None
 
 demo_dir = os.path.dirname(os.path.abspath(SPEC))
 
-# Collect package data files that PyInstaller misses
-safehttpx_datas = collect_data_files('safehttpx')
-gradio_client_datas = collect_data_files('gradio_client')
-gradio_datas = collect_data_files('gradio')
+# Collect data files from all installed packages to avoid missing version.txt etc.
+# Gradio and its dependencies (safehttpx, groovy, etc.) rely on package data files
+all_extra_datas = []
+for pkg_name in [
+    'gradio', 'gradio_client', 'safehttpx', 'groovy',
+    'semantic_version', 'tomlkit', 'orjson',
+]:
+    try:
+        all_extra_datas += collect_data_files(pkg_name)
+    except Exception:
+        pass
 
 a = Analysis(
     [os.path.join(demo_dir, 'app.py')],
@@ -21,7 +30,7 @@ a = Analysis(
     binaries=[],
     datas=[
         (os.path.join(demo_dir, 'data'), 'data'),
-    ] + safehttpx_datas + gradio_client_datas + gradio_datas,
+    ] + all_extra_datas,
     hiddenimports=[
         'gradio',
         'gradio.routes',
