@@ -1,0 +1,55 @@
+name: Build Demo (Windows exe)
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: demo
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: demo/requirements.txt
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Build exe with PyInstaller
+        run: pyinstaller --clean --noconfirm demo.spec
+
+      - name: Verify build output
+        run: |
+          Test-Path dist/CADSearchDemo/CADSearchDemo.exe
+          Get-ChildItem dist/CADSearchDemo | Measure-Object -Property Length -Sum | Select-Object Count, @{N='SizeMB';E={[math]::Round($_.Sum/1MB,1)}}
+        shell: pwsh
+
+      - name: Create zip archive
+        run: Compress-Archive -Path dist/CADSearchDemo/* -DestinationPath dist/CADSearchDemo.zip
+        shell: pwsh
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: CADSearchDemo-windows
+          path: demo/dist/CADSearchDemo.zip
+          retention-days: 30
+
+      - name: Upload to Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: demo/dist/CADSearchDemo.zip

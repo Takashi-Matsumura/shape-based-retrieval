@@ -1,0 +1,4 @@
+-r requirements.txt
+torch>=2.0
+pyinstaller>=6.0
+onnx>=1.14

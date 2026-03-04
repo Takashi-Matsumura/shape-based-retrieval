@@ -153,10 +153,64 @@ shape-based-retrieval/
 │   │       └── pointnet.py        # 簡易版 PointNet
 │   ├── scripts/               # サンプルデータ生成・投入
 │   └── db/init.sql            # DB 初期化 SQL
+├── demo/                     # Windows スタンドアロン デモアプリ
+│   ├── app.py                    # Gradio エントリポイント
+│   ├── core/                     # ONNX推論・SQLite・類似検索
+│   ├── scripts/                  # ONNX変換・データ生成・ビルド
+│   ├── data/                     # ONNXモデル・SQLite DB・サンプルSTL
+│   ├── demo.spec                 # PyInstaller 設定
+│   ├── requirements.txt          # 実行時依存
+│   └── requirements-dev.txt      # 開発用依存
 ├── docker-compose.yml
 ├── .env.example
 └── README.md
 ```
+
+## Windows デモ版（スタンドアロン）
+
+Docker や開発環境を使わず、Windows PC 上で手軽にCAD類似形状検索を試せるデモアプリです。
+
+### exe 版（Python 不要）
+
+[Releases](../../releases) ページから最新の **CADSearchDemo.zip** をダウンロードしてください。
+
+1. `CADSearchDemo.zip` をダウンロード
+2. 任意のフォルダに展開
+3. `CADSearchDemo.exe` をダブルクリック
+4. ブラウザが自動で開く（`http://127.0.0.1:7860`）
+5. STL / OBJ ファイルをドラッグ＆ドロップして「Search」
+
+> exe は GitHub Actions で自動ビルドされます。Python のインストールは不要です。
+
+### Python から実行する場合
+
+Python 3.10 以上がインストールされている環境では、ソースから直接実行できます。
+
+```bash
+cd demo
+pip install -r requirements.txt
+python app.py
+```
+
+ブラウザが自動で開き、`http://127.0.0.1:7860` でアプリにアクセスできます。
+
+### デモの使い方
+
+1. 画面左側でSTL / OBJ ファイルをアップロード
+2. 右側にアップロードした3Dモデルのプレビューが表示される
+3. top-k スライダーで返す結果数を調整（1〜10）
+4. 「Search」ボタンをクリック
+5. 下段に類似度スコア付きの3Dプレビューが表示される
+
+### デモの技術構成
+
+| 項目 | 技術 |
+|------|------|
+| UI | Gradio（ブラウザベース） |
+| 推論 | ONNX Runtime（PyTorch 不要、約50MB） |
+| DB | SQLite + numpy cosine similarity |
+| 3D表示 | Plotly Mesh3d |
+| サンプルデータ | 32個の基本形状（box / sphere / cylinder / cone / torus / composite） |
 
 ## 対応ファイル形式
 
