@@ -4,10 +4,16 @@
 import os
 import sys
 from pathlib import Path
+from PyInstaller.utils.hooks import collect_data_files
 
 block_cipher = None
 
 demo_dir = os.path.dirname(os.path.abspath(SPEC))
+
+# Collect package data files that PyInstaller misses
+safehttpx_datas = collect_data_files('safehttpx')
+gradio_client_datas = collect_data_files('gradio_client')
+gradio_datas = collect_data_files('gradio')
 
 a = Analysis(
     [os.path.join(demo_dir, 'app.py')],
@@ -15,7 +21,7 @@ a = Analysis(
     binaries=[],
     datas=[
         (os.path.join(demo_dir, 'data'), 'data'),
-    ],
+    ] + safehttpx_datas + gradio_client_datas + gradio_datas,
     hiddenimports=[
         'gradio',
         'gradio.routes',
