@@ -16,13 +16,19 @@ demo_dir = os.path.dirname(os.path.abspath(SPEC))
 # Gradio and its dependencies (safehttpx, groovy, etc.) rely on package data files
 all_extra_datas = []
 for pkg_name in [
-    'gradio', 'gradio_client', 'safehttpx', 'groovy',
+    'safehttpx', 'groovy', 'gradio_client',
     'semantic_version', 'tomlkit', 'orjson',
 ]:
     try:
         all_extra_datas += collect_data_files(pkg_name)
     except Exception:
         pass
+
+# Gradio needs .py source files available at runtime (for create_or_modify_pyi)
+try:
+    all_extra_datas += collect_data_files('gradio', include_py_files=True)
+except Exception:
+    pass
 
 a = Analysis(
     [os.path.join(demo_dir, 'app.py')],
