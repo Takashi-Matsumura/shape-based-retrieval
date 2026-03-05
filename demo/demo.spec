@@ -52,7 +52,7 @@ a = Analysis(
     ],
     hookspath=[],
     hooksconfig={},
-    runtime_hooks=[],
+    runtime_hooks=[os.path.join(demo_dir, 'hooks', 'runtime_hook.py')],
     excludes=[
         'torch',
         'torchvision',
