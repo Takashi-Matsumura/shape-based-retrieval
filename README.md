@@ -104,10 +104,14 @@ http://localhost:3000 を開きます。
 ### 類似検索
 
 1. 「類似検索」タブを選択
-2. STL / OBJ ファイルをドラッグ＆ドロップ（またはクリックして選択）
+2. STL / OBJ ファイルをドラッグ＆ドロップ（またはクリックして選択）、
+   または **「デモ用サンプルから選択」** でプリセットのクエリファイルをワンクリック選択
 3. 3Dプレビューで確認
 4. 「類似検索」ボタンをクリック
 5. 類似度スコア付きの結果が表示されます
+
+> デモ用サンプルは `backend/data/demo_queries/` に STL 6 点・OBJ 4 点の計 10 ファイルが格納されています。
+> `docker exec cad-search-backend python -m scripts.generate_demo_queries` で再生成できます。
 
 ### データ登録
 
@@ -125,6 +129,8 @@ http://localhost:3000 を開きます。
 | `GET` | `/api/models/{id}` | モデル詳細取得 |
 | `DELETE` | `/api/models/{id}` | モデル削除 |
 | `GET` | `/api/models/{id}/file` | CADファイルダウンロード |
+| `GET` | `/api/demo-queries` | デモ用クエリファイル一覧 |
+| `GET` | `/api/demo-queries/{filename}` | デモ用クエリファイルダウンロード |
 | `GET` | `/api/health` | ヘルスチェック |
 
 ## ディレクトリ構成
@@ -152,6 +158,10 @@ shape-based-retrieval/
 │   │   └── ml/
 │   │       └── pointnet.py        # 簡易版 PointNet
 │   ├── scripts/               # サンプルデータ生成・投入
+│   │   ├── generate_samples.py      # 登録用サンプル生成 (32個)
+│   │   ├── seed_data.py             # サンプルを API 経由で登録
+│   │   └── generate_demo_queries.py # 検索デモ用クエリ生成 (STL+OBJ)
+│   ├── data/demo_queries/     # デモ用クエリファイル (STL 6 + OBJ 4)
 │   └── db/init.sql            # DB 初期化 SQL
 ├── demo/                     # Windows スタンドアロン デモアプリ
 │   ├── app.py                    # Gradio エントリポイント

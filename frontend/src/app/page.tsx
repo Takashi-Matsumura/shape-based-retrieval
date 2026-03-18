@@ -29,6 +29,7 @@ export default function Home() {
   const [messageType, setMessageType] = useState<"success" | "error">("success");
   const [searchResults, setSearchResults] = useState<SearchResult[] | null>(null);
   const [registeredModels, setRegisteredModels] = useState<CadModel[]>([]);
+  const [demoQueries, setDemoQueries] = useState<{ filename: string; format: string; size: string }[]>([]);
 
   const fetchModels = useCallback(async () => {
     try {
@@ -42,9 +43,21 @@ export default function Home() {
     }
   }, []);
 
+  const fetchDemoQueries = useCallback(async () => {
+    try {
+      const res = await fetch("/api/demo-queries");
+      if (res.ok) {
+        setDemoQueries(await res.json());
+      }
+    } catch {
+      // Silently fail
+    }
+  }, []);
+
   useEffect(() => {
     fetchModels();
-  }, [fetchModels]);
+    fetchDemoQueries();
+  }, [fetchModels, fetchDemoQueries]);
 
   const handleFileSelect = useCallback((file: File) => {
     setSelectedFile(file);
@@ -56,6 +69,18 @@ export default function Home() {
     };
     reader.readAsArrayBuffer(file);
   }, []);
+
+  const handleDemoSelect = useCallback(async (filename: string) => {
+    try {
+      const res = await fetch(`/api/demo-queries/${encodeURIComponent(filename)}`);
+      if (!res.ok) return;
+      const blob = await res.blob();
+      const file = new File([blob], filename, { type: "application/octet-stream" });
+      handleFileSelect(file);
+    } catch {
+      // Silently fail
+    }
+  }, [handleFileSelect]);
 
   const handleRegister = useCallback(async () => {
     if (!selectedFile) return;
@@ -176,6 +201,30 @@ export default function Home() {
         {/* Left: Upload + Preview */}
         <div className="space-y-4">
           <CadUploader onFileSelect={handleFileSelect} />
+
+          {mode === "search" && demoQueries.length > 0 && (
+            <div className="bg-[var(--card-bg)] border border-[var(--border)] rounded-xl p-4">
+              <h3 className="text-sm font-medium mb-3 opacity-70">
+                デモ用サンプルから選択
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {demoQueries.map((q) => (
+                  <button
+                    key={q.filename}
+                    onClick={() => handleDemoSelect(q.filename)}
+                    className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${
+                      selectedFile?.name === q.filename
+                        ? "border-[var(--primary)] bg-blue-50 text-[var(--primary)] dark:bg-blue-900/30"
+                        : "border-[var(--border)] hover:border-[var(--primary)] hover:bg-[var(--accent)]"
+                    }`}
+                  >
+                    <span>{q.filename}</span>
+                    <span className="ml-1.5 opacity-50">{q.format}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {fileBuffer && selectedFile && (
             <div className="bg-[var(--card-bg)] border border-[var(--border)] rounded-xl p-4">

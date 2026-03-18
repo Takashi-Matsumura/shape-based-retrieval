@@ -18,6 +18,8 @@ from app.services.similarity import search_similar
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api", tags=["search"])
 
+DEMO_QUERIES_DIR = Path(__file__).parent.parent.parent / "data" / "demo_queries"
+
 
 @router.post("/search", response_model=SearchResponse)
 async def search_cad(
@@ -84,5 +86,33 @@ async def download_model_file(
     return FileResponse(
         path=str(file_path),
         filename=row.filename,
+        media_type="application/octet-stream",
+    )
+
+
+@router.get("/demo-queries")
+async def list_demo_queries() -> list[dict[str, str]]:
+    """List available demo query files."""
+    if not DEMO_QUERIES_DIR.is_dir():
+        return []
+    files = sorted(DEMO_QUERIES_DIR.iterdir())
+    return [
+        {"filename": f.name, "format": f.suffix.lstrip(".").upper(), "size": str(f.stat().st_size)}
+        for f in files
+        if f.suffix.lower() in ALLOWED_EXTENSIONS
+    ]
+
+
+@router.get("/demo-queries/{filename}")
+async def get_demo_query_file(filename: str) -> FileResponse:
+    """Download a demo query file."""
+    # Prevent path traversal
+    safe_name = Path(filename).name
+    file_path = DEMO_QUERIES_DIR / safe_name
+    if not file_path.is_file() or file_path.suffix.lower() not in ALLOWED_EXTENSIONS:
+        raise HTTPException(status_code=404, detail="Demo query file not found")
+    return FileResponse(
+        path=str(file_path),
+        filename=safe_name,
         media_type="application/octet-stream",
     )
