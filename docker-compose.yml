@@ -29,6 +29,7 @@ services:
     volumes:
       - ./backend/app:/app/app
       - ./backend/scripts:/app/scripts
+      - ./backend/data:/app/data
       - cad_uploads:/app/uploads
     depends_on:
       db:
